@@ -4,6 +4,7 @@ import os
 import csv
 import re
 from bs4 import BeautifulSoup
+import pytube
 
 modelYearListJson = {
     "safety_features": "All",
@@ -100,7 +101,6 @@ class toyota_video:
         self.results = []
         self.make = 'Toyota'
         self.all_model = 'All'
-        self.all_year = 'Year'
         self.filename = filename
         self.section_list = []
         self.section = ''
@@ -109,6 +109,7 @@ class toyota_video:
         with open('output/%s' % filename, 'a', encoding="utf-8", newline='') as csv_file:
             writer = csv.writer(csv_file, delimiter=',')
             writer.writerows(lines)
+        csv_file.close()
 
     def write_csv(self, lines, filename):
         if not os.path.isdir('output'):
@@ -174,8 +175,10 @@ class toyota_video:
                     self.section = section['term']
             title = video['title']['$t']
             description = video['media$group']['media$description']['$t']
-            video_url = video['link'][0]['href']
+            video_url = video['link'][0]['href'].split("&")[0]
             thumbnail_url = video['media$group']['media$thumbnail'][0]['url']
+            if '?' in thumbnail_url:
+                thumbnail_url = thumbnail_url.split('?')[0]
 
             line = [[year, self.make, model, self.section, title, description, thumbnail_url, video_url]]
             print(line)
@@ -202,9 +205,64 @@ class toyota_video:
                 continue
             print('The End: %s' % URL)
 
-print('==========================Start script============================')
-filename = 'Toyota_how_to_videos.csv'
-toyota_video = toyota_video(filename=filename)
-toyota_video.loop_request_urls()
-print('=========================The End Script===========================')
+class video_download:
+    def __init__(self, filePath):
+        self.filePath = 'output/%s' % filePath
+
+    def get_links_from_csv(self):
+        video_links = []
+        with open(self.filePath, 'r', encoding='utf-8') as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            for row in csv_reader:
+                if not row[7].find('http'):
+                    video_links.append(row[7])
+        return list(set(video_links))
+
+    def write_files_downloaded_to_txt(self, downloaded_url):
+        with open("videos_downloaded_list.txt", "a") as text_file:
+            print(f"{downloaded_url}", file=text_file)
+
+    def read_files_downloaded_from_txt(self):
+        with open("videos_downloaded_list.txt", 'r') as text_file:
+            return list(map(lambda s: s.strip(), text_file.readlines()))
+
+    def write_count_txt(self, count, filename):
+        with open(f'{filename}', 'a') as text_file:
+            text_file.write(count)
+
+    def read_count_txt(self, filename):
+        if not os.path.isfile(filename):
+            self.write_count_txt(str(0), filename)
+        with open(f'{filename}', 'r') as text_file:
+            return int(text_file.read())
+
+    def video_download_from_youtube(self):
+        video_urls = self.get_links_from_csv()
+        if not os.path.isdir('videos'):
+            os.mkdir('videos')
+        for video_url in video_urls:
+            downloaded_list = self.read_files_downloaded_from_txt()
+            if video_url in downloaded_list:
+                print(f'{video_url} was already downloaded!')
+                continue
+            print('Starting to download: %s' % video_url)
+            try:
+                youtube = pytube.YouTube(video_url)
+            except:
+                self.write_count_txt(video_url+'\n', 'failed.txt')
+                print('No exist this file, so Failed in youtube connection')
+                continue
+            video = youtube.streams.first()
+            video.download('F:\\working\\python\\scrapping\\fetch_videos_from_each_site\\toyota\\videos')
+            print('Successfully downloaded: %s' % video_url)
+            self.write_files_downloaded_to_txt(video_url)
+            self.write_count_txt(video_url, 'success.txt')
+
+if __name__ == '__main__':
+    print('==========================Start script============================')
+    filename = 'Toyota_how_to_videos.csv'
+    toyota_video = toyota_video(filename=filename)
+    video_download = video_download(filePath=filename)
+    video_download.video_download_from_youtube()
+    print('=========================The End Script===========================')
 
