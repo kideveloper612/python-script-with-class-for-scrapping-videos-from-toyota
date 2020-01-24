@@ -95,6 +95,7 @@ all_section_list = [
     '4WD Features',
     'Exterior Features',
     'Features']
+    
 class toyota_video:
     def __init__(self, filename):
         self.csv_header = [['PUBLISHED', 'MAKE', 'MODEL', 'SECTION', 'TITLE', 'DESCRIPTION', 'THUMBNAIL_URL', 'VIDEO_URL']]
