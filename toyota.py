@@ -72,29 +72,6 @@ modelYearListJson = {
 	"xb": "xB",
 	"xd": "xD"
 }
-all_section_list = [
-    'All Videos',
-    'Audio System',
-    'Basic Operations',
-    'Climate Control System',
-    'Entune™',
-    'Entune',
-    'Headlights',
-    'Hybrid Systems',
-    'Instrument Cluster',
-    'Interior Features',
-    'Keys',
-    'Mobile Apps',
-    'Overview',
-    'Safety Features',
-    'Seating',
-    'Steering Wheel',
-    'Suspension',
-    'Technology',
-    'Traction Features',
-    '4WD Features',
-    'Exterior Features',
-    'Features']
     
 class toyota_video:
     def __init__(self, filename):
